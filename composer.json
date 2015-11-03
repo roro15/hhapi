@@ -1,0 +1,13 @@
+{
+    "name": "roro15/hhapi",
+    "description": "Headhunter api.",
+    "authors": [
+        {
+            "name": "roro15",
+            "email": "roro15@yandex.ru"
+        }
+    ],
+    "require": {
+        "nategood/httpful": "*"
+    }
+}
