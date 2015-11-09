@@ -7,7 +7,7 @@
             "email": "roro15@yandex.ru"
         }
     ],
-    "require": {
-        "nategood/httpful": "*"
+    "autoload": {
+        "psr-4": {"hh\\": "src/"}
     }
 }

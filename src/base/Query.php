@@ -1,18 +1,27 @@
 <?php
 
+namespace hh\base;
+use hh\exception\BaseException;
+use hh\exception\ResponseException;
+
 abstract class Query {
 
-    protected $client;
-    protected $modelClass;
-    
+    protected $client;    
     protected $baseUrl;
     protected $pathSections = [];
     protected $queryParams = [];
-
-    public function __construct(Client $client, $modelClass) {
+    protected $method = 'GET';
+    protected $isSecure = true;
+    protected $isAsArray = false;
+    protected $content;
+    protected $multipleResponseAttribute = 'items';
+    
+    abstract public function getUrl();
+    abstract public function getModelClass();
+    
+    public function __construct(Client $client) {
         $this->client = $client;
-        $this->modelClass = $modelClass;
-        $this->setRelativeUrl(call_user_func([$modelClass, 'getUrl']));
+        $this->setRelativeUrl($this->getUrl());
     }
     
     public function setRelativeUrl($url) {
@@ -20,13 +29,15 @@ abstract class Query {
         list($sections, $params) = $this->parseRelativeUrl($url);
         $this->pathSections = $sections;
         $this->queryParams = $params;
+        return $this;
     }
     
     public function setAbsoluteUrl($url) {
         $info = parse_url($url);
-        $this->baseUrl = $info['schema'] . '://' . $info['host'] . '/';
+        $this->baseUrl = $info['scheme'] . '://' . $info['host'] . '/';
         $this->pathSections = empty($info['path']) ? [] : $this->parseUrlPath($info['path']);
         $this->queryParams = empty($info['query']) ? [] : $this->parseQueryString($info['query']);
+        return $this;
     }
 
     public function addPathSection($section) {
@@ -64,6 +75,24 @@ abstract class Query {
         $this->queryParams = [];
         return $this;
     }
+    
+    public function setMethod($value) {
+        $this->method = $value;
+        return $this;
+    }
+    
+    public function getMethod() {
+        return $this->method;
+    }
+    
+    public function setContent($value) {
+        $this->content = $value;
+        return $this;
+    }
+    
+    public function getContent() {
+        return $this->content;
+    }
 
     public function setPage($value) {
         return $this->setQueryParam('page', $value);
@@ -72,20 +101,45 @@ abstract class Query {
     public function setPerPage($value) {
         return $this->setQueryParam('per_page', $value);
     }
-
-    public function one() {
-        $response = $this->getSearchResponse();
-        $class = $this->getModelClass();
-        $model = new $class($this->client, $response->getContent());
-        return $model;
+    
+    public function getClient() {
+        return $this->client;
+    }
+    
+    public function getMultipleResponseAttribute() {
+        return $this->multipleResponseAttribute;
+    }
+    
+    public function setMultipleResponseAttribtue($value) {
+        $this->multipleResponseAttribute = $value;
+        return $this;
+    }
+    
+    public function raw() {
+        $response = $this->buildResponse(); 
+        if ($response->getStatusCode() != 200) {
+            throw new ResponseException('failed load model', BaseException::ERROR_SERVER, $response);
+        }
+        return $response->getParsed();
     }
 
-    public function all() {
-        $class = $this->getModelClass();
-        $models = [];
-        $response = $this->getSearchResponse();
-        $pagination = new Pagination($totalCount);
-        return $models;
+    public function one() {
+        return $this->createModel($this->raw());
+    }
+
+    public function all($attribute = null) {
+        $raw = $this->raw();
+        return $this->createModels($raw, $attribute);
+     }
+   
+    public function collection($attribute = null) {
+        $raw = $this->raw();
+        $models = $this->createModels($raw, $attribute);
+        if (!property_exists($raw, 'found')) {
+            throw new BaseException('no pagination attributes in response');
+        }
+        $pagination = new Pagination($raw->found, $raw->per_page, $raw->page);
+        return new Collection($pagination, $this, $models);
     }
 
     protected function parseUrlPath($path) {
@@ -117,5 +171,29 @@ abstract class Query {
         }
         return $url;
     }
-
+    
+    protected function buildResponse() {
+        $url = $this->buildUrl();
+        $requestMethod = $this->isSecure ? 'secureRequest' : 'request';
+        return $this->client->$requestMethod($url, $this->getMethod(), [], $this->getContent());
+    }
+    
+    protected function createModel($raw) {
+        $modelClass = $this->getModelClass();
+        return new $modelClass($this->getClient(), $raw);
+    }
+    
+    protected function createModels($raw, $attribute) {
+        if (is_null($attribute)) {
+            $attribute = $this->getMultipleResponseAttribute();
+        }
+        if (!is_array($raw->$attribute)) {
+            throw new BaseException('no attribtue ' . $attribute . ' in response');
+        }
+        $models = [];
+        foreach($raw->$attribute as $itemRaw) {
+            $models[] = $this->createModel($itemRaw); 
+        }
+        return $models;
+    }
 }

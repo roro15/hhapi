@@ -1,62 +1,69 @@
 <?php
 
-namespace base;
-use exception\AuthException;
+namespace hh\base;
+use hh\exception\AuthException;
+use hh\exception\BaseException;
+use hh\exception\ResponseException;
 
 class Client {
     
-    protected $appId;
-    protected $appSecret;
+    protected $name;
+    protected $email;
+    protected $version;
     protected $token;
+    protected $auth;
     
-    public function __construct($appId, $appSecret, Token $token = null) {
-        $this->appId = $appId;
-        $this->appSecret = $appSecret;
+    public function __construct($name, $email, $version = '1.0', Token $token = null, Auth $auth = null) {
+        $this->name = $name;
+        $this->email = $email;
+        $this->version = $version;
         $this->token = $token;
+        $this->auth = $auth;
     }
     
-    public function request($uri, $method, array $headers = [], $content = null) {
+    public function getBaseUrl() {
+        return 'https://api.hh.ru/';
+    }
+    
+    public function request($url, $method, array $headers = [], $content = null) {
         $request = new Request;
         $headers['User-Agent'] = $this->buildUserAgent();
         $request->setMethod($method)
                 ->setHeaders($headers)
                 ->setContent($content);
-        return $request->send($uri);
+        return $request->send($url);
     }
     
-    public function secureRequest($uri, $method, array $headers = [], $content = null) {
+    public function secureRequest($url, $method, array $headers = [], $content = null) {
         if (empty($this->token)) {
             throw new AuthException;
         }
         $headers['Authorization'] = 'Bearer ' . $this->token->accessToken;
-        $response = $this->request($uri, $method, $headers, $content);
+        $response = $this->request($url, $method, $headers, $content);
         if ($response->hasOldTokenError()) {
             $this->refreshToken();
             $headers['Authorization'] = 'Bearer ' . $this->token->accessToken;
-            $response = $this->request($uri, $method, $headers, $content);
+            $response = $this->request($url, $method, $headers, $content);
         }
         return $response;
         
     }
     
     protected function refreshToken() {
-        $content = [
-            'grant_type' => 'refresh_token',
-            'refresh_token' => $this->token->refreshToken,
-        ];
-        $headers = [];
-        $request = $this->prepareRequest('POST', $headers, $content);
-        $response = $request->send($this->getRefreshTokenUri());
-        $token = json_decode($response->getContent());
-        if (!isset($token['access_token'])) {
-            throw new AuthException;
+        if (empty($this->auth)) {
+            throw new BaseException('No auth specified');
         }
-        $this->token = new Token($token['access_token'], $token['refresh_token']);
+        $response = $this->auth->getRefreshTokenResponse($this->token->refreshToken);
+        $content = $response->getParsed();
+        if (!empty($content['access_token'])) {
+            $this->token = new Token($content['access_token'], $content['refresh_token']);
+        } else {
+           throw new ResponseException('refresh token error', BaseException::ERROR_AUTH, $response);
+        }
     }
     
     protected function buildUserAgent() {
-        return 'HHExport/1.0 (roro15@yandex.ru)';
+        return $this->name . '/' . $this->version . ' (' . $this->email . ')';
     }
-    
-    
+
 }

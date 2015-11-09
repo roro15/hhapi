@@ -1,6 +1,6 @@
 <?php
 
-namespace base;
+namespace hh\base;
 
 class Token {
     
