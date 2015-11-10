@@ -85,6 +85,6 @@ class Collection implements Countable, Iterator, ArrayAccess {
         $perPage = $this->pagination->getPerPage();
         $page = floor($index / $perPage);
         $index %= $perPage;
-        return [$page, $index];
+        return array($page, $index);
     }
 }
