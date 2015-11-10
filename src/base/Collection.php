@@ -3,8 +3,11 @@
 namespace hh\base;
 use Countable;
 use Iterator;
+use ArrayAccess;
+use OutOfBoundsException;
+use LogicException;
 
-class Collection implements Countable, Iterator {
+class Collection implements Countable, Iterator, ArrayAccess {
     
     protected $pagination;
     protected $query;
@@ -40,9 +43,7 @@ class Collection implements Countable, Iterator {
     }
     
     public function current() {
-        list($page, $index) = $this->indexToPage($this->currentIndex);
-        $models = $this->getPage($page);
-        return $models[$index];
+        return $this->offsetGet($this->currentIndex);
     }
     
     public function next() {
@@ -51,6 +52,27 @@ class Collection implements Countable, Iterator {
     
     public function rewind() {
         $this->currentIndex = 0;
+    }
+    
+    public function offsetGet($offset) {
+        if (!$this->offsetExists($offset)) {
+            throw new OutOfBoundsException;
+        }
+        list($page, $index) = $this->indexToPage($offset);
+        $models = $this->getPage($page);
+        return $models[$index];
+    }
+    
+    public function offsetSet($offset, $value) {
+        throw new LogicException;
+    }
+    
+    public function offsetExists($offset) {
+        return $offset >= 0 && $offset <  $this->count();
+    }
+    
+    public function offsetUnset($offset) {
+        throw new LengthException;
     }
     
     protected function loadPage($index) {
