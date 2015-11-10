@@ -11,7 +11,7 @@ class Collection implements Countable, Iterator, ArrayAccess {
     
     protected $pagination;
     protected $query;
-    protected $pages = [];
+    protected $pages = array();
     protected $currentIndex = 0;
     
     public function __construct(Pagination $pagination, Query $query, array $models) {

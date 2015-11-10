@@ -25,7 +25,7 @@ class Client {
         return 'https://api.hh.ru/';
     }
     
-    public function request($url, $method, array $headers = [], $content = null) {
+    public function request($url, $method, array $headers = array(), $content = null) {
         $request = new Request;
         $headers['User-Agent'] = $this->buildUserAgent();
         $request->setMethod($method)
@@ -34,7 +34,7 @@ class Client {
         return $request->send($url);
     }
     
-    public function secureRequest($url, $method, array $headers = [], $content = null) {
+    public function secureRequest($url, $method, array $headers = array(), $content = null) {
         if (empty($this->token)) {
             throw new AuthException;
         }

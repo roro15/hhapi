@@ -8,7 +8,7 @@ class Request {
 
     private $_method = 'GET';
     private $_content = '';
-    private $_headers = [];
+    private $_headers = array();
 
     public function getDefaultUserAgent() {
         return 'HHExport/1.0 (roro15@yandex.ru)';

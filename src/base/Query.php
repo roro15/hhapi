@@ -8,8 +8,8 @@ abstract class Query {
 
     protected $client;    
     protected $baseUrl;
-    protected $pathSections = [];
-    protected $queryParams = [];
+    protected $pathSections = array();
+    protected $queryParams = array();
     protected $method = 'GET';
     protected $isSecure = true;
     protected $isAsArray = false;
@@ -35,8 +35,8 @@ abstract class Query {
     public function setAbsoluteUrl($url) {
         $info = parse_url($url);
         $this->baseUrl = $info['scheme'] . '://' . $info['host'] . '/';
-        $this->pathSections = empty($info['path']) ? [] : $this->parseUrlPath($info['path']);
-        $this->queryParams = empty($info['query']) ? [] : $this->parseQueryString($info['query']);
+        $this->pathSections = empty($info['path']) ? array() : $this->parseUrlPath($info['path']);
+        $this->queryParams = empty($info['query']) ? array() : $this->parseQueryString($info['query']);
         return $this;
     }
 
@@ -46,7 +46,7 @@ abstract class Query {
     }
     
     public function removeSections() {
-        $this->pathSections = [];
+        $this->pathSections = array();
         return $this;
     }
     
@@ -72,7 +72,7 @@ abstract class Query {
     }
     
     public function removeQueryParams() {
-        $this->queryParams = [];
+        $this->queryParams = array();
         return $this;
     }
     
@@ -147,7 +147,7 @@ abstract class Query {
     }
     
     protected function parseQueryString($query) {
-        $params = [];
+        $params = array();
         parse_str($query, $params);
         return $params;
     }
@@ -156,7 +156,7 @@ abstract class Query {
         $parts = explode('?', $url);
         $path = $parts[0];
         if (count($parts) < 2) {
-            $params = [];
+            $params = array();
         } else {
             $params = $this->parseQueryString($parts[1]);
         }
@@ -175,7 +175,7 @@ abstract class Query {
     protected function buildResponse() {
         $url = $this->buildUrl();
         $requestMethod = $this->isSecure ? 'secureRequest' : 'request';
-        return $this->client->$requestMethod($url, $this->getMethod(), [], $this->getContent());
+        return $this->client->$requestMethod($url, $this->getMethod(), array(), $this->getContent());
     }
     
     protected function createModel($raw) {
@@ -190,7 +190,7 @@ abstract class Query {
         if (!is_array($raw->$attribute)) {
             throw new BaseException('no attribtue ' . $attribute . ' in response');
         }
-        $models = [];
+        $models = array();
         foreach($raw->$attribute as $itemRaw) {
             $models[] = $this->createModel($itemRaw); 
         }
