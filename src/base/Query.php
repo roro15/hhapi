@@ -161,7 +161,7 @@ abstract class Query {
             $params = $this->parseQueryString($parts[1]);
         }
         $sections = $this->parseUrlPath($path);
-        return [$sections, $params];
+        return array($sections, $params);
     }
     
     protected function buildUrl() {
