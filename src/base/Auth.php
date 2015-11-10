@@ -17,7 +17,7 @@ class Auth {
             session_start();
         }
         if (empty($_SESSION['hh_auth'])) {
-            $_SESSION['hh_auth'] = [];
+            $_SESSION['hh_auth'] = array();
         }
     }
 
