@@ -20,6 +20,10 @@ class Collection implements Countable, Iterator, ArrayAccess {
         $this->pages[$pagination->getCurrentPage()] = $models;
     }
     
+    public function getPagination() {
+        return $this->pagination;
+    }
+    
     public function getPage($index) {
         if ($index < 0 || $index >=  $this->pagination->getPageCount()) {
             return false;
