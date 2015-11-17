@@ -5,11 +5,11 @@ use hh\base\Query;
 use hh\base\Client;
 
 class NegotiationMessageQuery extends Query {
-
-    protected $url;
     
-    public function __construct(Client $client, $url) {
-        $this->url = $url;
+    protected $negotiationId;
+    
+    public function __construct(Client $client, $negotiationId) {
+        $this->negotiationId = $negotiationId;
         parent::__construct($client);
     }
     
@@ -18,7 +18,7 @@ class NegotiationMessageQuery extends Query {
     }
     
     public function getUrl() {
-        return $this->url;
+        return '/negotiations/' . $this->negotiationId . '/messages';
     }
 
 }

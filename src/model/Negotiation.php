@@ -22,8 +22,10 @@ class Negotiation extends Model {
 
     public function getMessages() {
         if (is_null($this->messages) && !empty($this->getRaw()->messages_url)) {
-            $query = new NegotiationMessageQuery($this->getClient(), $this->getRaw()->messages_url);
-            $this->messages = $query->collection();
+            $query = new NegotiationMessageQuery($this->getClient(), $this->getRaw()->id);
+            $this->messages = $query
+                    ->setAbsoluteUrl($this->getRaw()->messages_url)
+                    ->collection();
         }
         
         return $this->messages;
