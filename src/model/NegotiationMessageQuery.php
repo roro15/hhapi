@@ -3,6 +3,7 @@
 namespace hh\model;
 use hh\base\Query;
 use hh\base\Client;
+use hh\model\NegotiationMessage;
 
 class NegotiationMessageQuery extends Query {
     
