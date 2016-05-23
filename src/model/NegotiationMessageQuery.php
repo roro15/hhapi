@@ -3,7 +3,6 @@
 namespace hh\model;
 use hh\base\Query;
 use hh\base\Client;
-use hh\model\NegotiationMessage;
 
 class NegotiationMessageQuery extends Query {
     
@@ -15,7 +14,7 @@ class NegotiationMessageQuery extends Query {
     }
     
     public function getModelClass() {
-        NegotiationMessage::className();
+        return NegotiationMessage::className();
     }
     
     public function getUrl() {
